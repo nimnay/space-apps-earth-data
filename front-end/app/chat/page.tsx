@@ -73,24 +73,26 @@ export default function AIChatPage() {
 
   return (
     <div className="container mx-auto max-w-4xl p-4">
-      <Card className="w-full">
-        <div className="p-4">
-          <div className="flex gap-2 mb-4">
+      <Card className="w-full bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 shadow-lg">
+        <div className="p-6">
+          <div className="flex gap-3 mb-6 justify-center">
             <Button
               variant={mode === "pollution" ? "default" : "outline"}
               onClick={() => setMode("pollution")}
+              className={`${mode === "pollution" ? 'bg-blue-600 hover:bg-blue-700' : ''} text-sm font-semibold px-6 py-2 rounded-full transition-all`}
             >
-              Pollution Mode
+              🌫️ Air Quality Mode
             </Button>
             <Button
               variant={mode === "wildfire" ? "default" : "outline"}
               onClick={() => setMode("wildfire")}
+              className={`${mode === "wildfire" ? 'bg-red-600 hover:bg-red-700' : ''} text-sm font-semibold px-6 py-2 rounded-full transition-all`}
             >
-              Wildfire Mode
+              🔥 Wildfire Mode
             </Button>
           </div>
           
-          <ScrollArea className="h-[500px] mb-4 p-4 rounded-lg border">
+          <ScrollArea className="h-[600px] mb-6 p-6 rounded-xl border bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm shadow-inner">
             <div className="flex flex-col gap-4">
               {messages.map((message, index) => (
                 <div
@@ -100,13 +102,13 @@ export default function AIChatPage() {
                   }`}
                 >
                   <div
-                    className={`max-w-[80%] p-3 rounded-lg ${
+                    className={`max-w-[80%] p-4 rounded-2xl ${
                       message.type === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    }`}
+                        ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg ml-4"
+                        : "bg-gradient-to-r from-gray-100 to-gray-50 dark:from-slate-800 dark:to-slate-700 shadow-md mr-4"
+                    } transform transition-all duration-200 hover:scale-[1.02]`}
                   >
-                    <pre className="whitespace-pre-wrap font-sans">
+                    <pre className="whitespace-pre-wrap font-sans text-[15px] leading-relaxed">
                       {message.content}
                     </pre>
                   </div>
@@ -114,15 +116,19 @@ export default function AIChatPage() {
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="max-w-[80%] p-3 rounded-lg bg-muted animate-pulse">
-                    Thinking...
+                  <div className="max-w-[80%] p-4 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-50 dark:from-slate-800 dark:to-slate-700 shadow-md mr-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
           </ScrollArea>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <input
               type="text"
               value={input}
@@ -133,10 +139,14 @@ export default function AIChatPage() {
                   ? "Ask about air quality for your activity..."
                   : "Ask about wildfire conditions..."
               }
-              className="flex-1 p-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex-1 p-4 rounded-xl border bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner text-[15px] transition-all placeholder:text-gray-400"
             />
-            <Button onClick={sendMessage} disabled={isLoading}>
-              Send
+            <Button 
+              onClick={sendMessage} 
+              disabled={isLoading}
+              className="px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              {isLoading ? 'Sending...' : 'Send'}
             </Button>
           </div>
         </div>
