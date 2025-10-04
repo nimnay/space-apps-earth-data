@@ -12,7 +12,20 @@ export default function Navbar() {
           >
             Earth Data
           </Link>
-          <div className="flex justify-end">
+          <div className="flex items-center gap-6">
+            <Link
+              href="/chat"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
+              AeroGuard Chat
+            </Link>
+            <Link
+              href="/aqi-anderson"
+              className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1"
+            >
+              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              AQI Anderson
+            </Link>
             <ThemeDropdown />
           </div>
         </div>
