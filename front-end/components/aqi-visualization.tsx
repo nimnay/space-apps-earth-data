@@ -4,7 +4,6 @@ import * as d3 from "d3";
 import * as React from "react";
 
 // If you use shadcn/ui ensure these imports exist in your project
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -13,8 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useTheme } from "next-themes";
 
 // ---------- Types ----------
 interface SensorResult {
@@ -45,87 +44,6 @@ interface Sensor {
   };
 }
 
-// ---------- Fallback Sample (trimmed) ----------
-const sampleSensors: Sensor[] = [
-  {
-    id: 13332020,
-    data: {
-      meta: {
-        name: "openaq-api",
-        page: 1,
-        limit: 100,
-        found: ">100",
-      },
-      results: [
-        {
-          value: 0,
-          parameter: { id: 19, name: "pm1", units: "µg/m³" },
-          period: {
-            label: "raw",
-            interval: "01:00:00",
-            datetimeFrom: {
-              utc: "2025-06-15T04:00:00Z",
-              local: "2025-06-15T00:00:00-04:00",
-            },
-            datetimeTo: {
-              utc: "2025-06-15T05:00:00Z",
-              local: "2025-06-15T01:00:00-04:00",
-            },
-          },
-        },
-        {
-          value: 0.03945833258330822,
-          parameter: { id: 19, name: "pm1", units: "µg/m³" },
-          period: {
-            label: "raw",
-            interval: "01:00:00",
-            datetimeFrom: {
-              utc: "2025-06-15T05:00:00Z",
-              local: "2025-06-15T01:00:00-04:00",
-            },
-            datetimeTo: {
-              utc: "2025-06-15T06:00:00Z",
-              local: "2025-06-15T02:00:00-04:00",
-            },
-          },
-        },
-        {
-          value: 0.07229166602094968,
-          parameter: { id: 19, name: "pm1", units: "µg/m³" },
-          period: {
-            label: "raw",
-            interval: "01:00:00",
-            datetimeFrom: {
-              utc: "2025-06-15T06:00:00Z",
-              local: "2025-06-15T02:00:00-04:00",
-            },
-            datetimeTo: {
-              utc: "2025-06-15T07:00:00Z",
-              local: "2025-06-15T03:00:00-04:00",
-            },
-          },
-        },
-        {
-          value: 1.6585833343366783,
-          parameter: { id: 19, name: "pm1", units: "µg/m³" },
-          period: {
-            label: "raw",
-            interval: "01:00:00",
-            datetimeFrom: {
-              utc: "2025-06-15T07:00:00Z",
-              local: "2025-06-15T03:00:00-04:00",
-            },
-            datetimeTo: {
-              utc: "2025-06-15T08:00:00Z",
-              local: "2025-06-15T04:00:00-04:00",
-            },
-          },
-        },
-      ],
-    },
-  },
-];
-
 // ---------- Hooks ----------
 function useResizeObserver<T extends HTMLElement>(
   callback: (entry: DOMRectReadOnly) => void
@@ -155,12 +73,18 @@ interface LineChartProps {
 const LineChart: React.FC<LineChartProps> = ({
   data,
   height = 160,
-  color = "hsl(var(--chart-1, 210 90% 50%))",
+  color,
   units,
   id,
 }) => {
   const containerRef = useResizeObserver<HTMLDivElement>(() => draw());
   const svgRef = React.useRef<SVGSVGElement | null>(null);
+
+  const { resolvedTheme } = useTheme();
+
+  console.log(resolvedTheme);
+
+  color = resolvedTheme === "dark" ? "#60a5fa" : "#2563eb";
 
   const draw = React.useCallback(() => {
     if (!containerRef.current || !svgRef.current || data.length === 0) return;
@@ -201,7 +125,7 @@ const LineChart: React.FC<LineChartProps> = ({
     // Axes
     const xAxis = d3
       .axisBottom<Date>(x)
-      .ticks(Math.min(6, data.length))
+      .ticks(Math.min(5, data.length))
       .tickFormat((d) =>
         d3.timeFormat(data.length > 24 ? "%H:%M" : "%H:%M")(d)
       );
@@ -299,31 +223,7 @@ const LineChart: React.FC<LineChartProps> = ({
       .style("padding", "2px 4px")
       .style("color", "hsl(var(--foreground))")
       .style("boxShadow", "0 2px 4px rgba(0,0,0,.1)");
-
-    const bisect = d3.bisector<{ date: Date; value: number }, Date>(
-      (d) => d.date
-    ).center;
-
-    svg
-      .on("pointerenter", () => focusGroup.style("display", null))
-      .on("pointerleave", () => focusGroup.style("display", "none"))
-      .on("pointermove", function (event) {
-        const [px] = d3.pointer(event, this);
-        const xm = x.invert(px - margin.left);
-        const i = bisect(data, xm);
-        const d = data[i];
-        if (!d) return;
-        focusGroup.attr(
-          "transform",
-          `translate(${margin.left + x(d.date)},${margin.top + y(d.value)})`
-        );
-        focusLabel.html(
-          `<strong>${d3.timeFormat("%H:%M")(
-            d.date
-          )}</strong><br/>${d.value.toFixed(3)} ${units || ""}`
-        );
-      });
-  }, [data, color, height, units, containerRef]);
+  }, [data, color, height, containerRef]);
 
   React.useEffect(() => {
     draw();
@@ -369,10 +269,19 @@ const SensorCard: React.FC<{ sensor: Sensor }> = ({ sensor }) => {
     <Card className="flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-base">Sensor {sensor.id}</CardTitle>
-          <Badge variant="secondary" className="text-xs">
-            {parameter?.toUpperCase()}
-          </Badge>
+          {(() => {
+            const readable = (p: string) => {
+              const u = p.toUpperCase();
+              if (u === "RELATIVEHUMIDITY") return "Relative Humidity";
+              if (u === "TEMPERATURE") return "Temperature";
+              return u;
+            };
+            return (
+              <CardTitle className="text-base">
+                Anderson {parameter ? readable(parameter) : ""}
+              </CardTitle>
+            );
+          })()}
         </div>
         <CardDescription className="text-xs">
           {sensor.data.meta.name} (last {ts.length} hrs)
@@ -417,75 +326,37 @@ const SensorCard: React.FC<{ sensor: Sensor }> = ({ sensor }) => {
 export default function AQIVisualization() {
   const [sensors, setSensors] = React.useState<Sensor[]>([]);
   const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    let cancelled = false;
     const load = async () => {
       setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch("/api/openaq");
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
 
-        // Expecting shape { sensors: Sensor[] } or single sensor
-        let parsed: Sensor[] = [];
-        if (Array.isArray(json?.sensors)) parsed = json.sensors;
-        else if (Array.isArray(json)) parsed = json as Sensor[];
-        else if (json?.id && json?.data) parsed = [json as Sensor];
+      const res = await fetch("/api/openaq");
+      const json = await res.json();
 
-        if (!parsed.length) {
-          parsed = sampleSensors;
-        }
-
-        if (!cancelled) setSensors(parsed);
-      } catch (e: any) {
-        if (!cancelled) {
-          setError(e.message);
-          setSensors(sampleSensors);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+      setSensors(json.sensors);
+      setLoading(false);
     };
     load();
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   return (
-    <div className="flex flex-col gap-4">
-      <header className="space-y-1">
-        <h2 className="text-lg font-semibold tracking-tight">
-          Air Quality Sensors
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Interactive hourly particulate measurements (pm1).
-        </p>
-      </header>
+    <div className="flex flex-col gap-4 w-full">
       <Separator />
       {loading && (
-        <div className="text-sm text-muted-foreground animate-pulse">
+        <div className=" flex align-middle justify-center text-sm text-muted-foreground animate-pulse">
           Loading sensor data...
         </div>
       )}
-      {error && (
-        <div className="text-xs text-destructive">
-          Error: {error} (showing fallback)
-        </div>
-      )}
-      <ScrollArea className="w-full">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 pb-4">
+      <div className="w-full">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch mx-auto max-w-6xl justify-center justify-items-center">
           {sensors.map((s) => (
-            <SensorCard key={s.id} sensor={s} />
+            <div key={s.id} className="flex h-full w-full">
+              <SensorCard sensor={s} />
+            </div>
           ))}
         </div>
-      </ScrollArea>
-      {sensors.length === 0 && !loading && (
-        <div className="text-sm text-muted-foreground">No sensors.</div>
-      )}
+      </div>
     </div>
   );
 }
