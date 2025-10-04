@@ -12,13 +12,7 @@ export default function Navbar() {
           >
             Earth Data
           </Link>
-          <div className="flex items-center space-x-8">
-            <Link
-              href="/"
-              className="text-muted-foreground hover:text-foreground transition-colors duration-200 font-medium"
-            >
-              Home
-            </Link>
+          <div className="flex justify-end">
             <ThemeDropdown />
           </div>
         </div>
