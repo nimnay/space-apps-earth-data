@@ -1,0 +1,5 @@
+*.nc
+.DS_Store
+.netrc
+*.cookies
+*.urs_cookies
