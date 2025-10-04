@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ThemeDropdown } from "../theme-dropdown";
 import { LayoutDashboard, Map, BarChart2, FileText, MessageSquare, Globe } from "lucide-react";
