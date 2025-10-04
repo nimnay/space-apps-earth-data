@@ -322,10 +322,99 @@ const SensorCard: React.FC<{ sensor: Sensor }> = ({ sensor }) => {
   );
 };
 
+// ---------- Forecast Component ----------
+const ForecastCard: React.FC<{
+  prediction: number;
+  loading: boolean;
+  dailyAverages: number[];
+}> = ({ prediction, loading, dailyAverages }) => {
+  const formatPrediction = (value: number) => {
+    if (isNaN(value) || value === null || value === undefined) {
+      return "No data available";
+    }
+    return `${value.toFixed(3)} μg/m³`;
+  };
+
+  const getAQILevel = (value: number) => {
+    if (isNaN(value) || value === null || value === undefined) return "Unknown";
+    // EPA AQI breakpoints for NO2 (μg/m³)
+    if (value <= 53) return "Good";
+    if (value <= 100) return "Moderate";
+    if (value <= 360) return "Unhealthy for Sensitive Groups";
+    if (value <= 649) return "Unhealthy";
+    if (value <= 1249) return "Very Unhealthy";
+    return "Hazardous";
+  };
+
+  const getAQIColor = (value: number) => {
+    if (isNaN(value) || value === null || value === undefined)
+      return "text-gray-500";
+    if (value <= 53) return "text-green-600";
+    if (value <= 100) return "text-yellow-600";
+    if (value <= 360) return "text-orange-600";
+    if (value <= 649) return "text-red-600";
+    if (value <= 1249) return "text-purple-600";
+    return "text-red-800";
+  };
+
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle className="text-lg">NO₂ Forecast</CardTitle>
+        <CardDescription>Predicted concentration for tomorrow</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-sm text-muted-foreground animate-pulse">
+              Generating forecast...
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="text-3xl font-bold mb-2">
+                {formatPrediction(prediction)}
+              </div>
+              <div
+                className={`text-lg font-semibold ${getAQIColor(prediction)}`}
+              >
+                {getAQILevel(prediction)}
+              </div>
+            </div>
+            {dailyAverages && dailyAverages.length > 0 && (
+              <div className="pt-4 border-t">
+                <div className="text-sm text-muted-foreground mb-2">
+                  Based on {dailyAverages.length} days of historical data
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Recent average:{" "}
+                  {dailyAverages.length > 0
+                    ? (
+                        dailyAverages.reduce((a, b) => a + b, 0) /
+                        dailyAverages.length
+                      ).toFixed(3)
+                    : "N/A"}{" "}
+                  μg/m³
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
 // ---------- Main Component ----------
 export default function AQIVisualization() {
   const [sensors, setSensors] = React.useState<Sensor[]>([]);
   const [loading, setLoading] = React.useState(false);
+  const [forecast, setForecast] = React.useState<{
+    prediction: number;
+    dailyAverages: number[];
+  } | null>(null);
+  const [forecastLoading, setForecastLoading] = React.useState(false);
 
   React.useEffect(() => {
     const load = async () => {
@@ -340,9 +429,43 @@ export default function AQIVisualization() {
     load();
   }, []);
 
+  React.useEffect(() => {
+    const loadForecast = async () => {
+      setForecastLoading(true);
+      try {
+        const res = await fetch("/api/openaq", {
+          method: "POST",
+        });
+        const json = await res.json();
+        setForecast({
+          prediction: json.prediction,
+          dailyAverages: json.dailyAverages,
+        });
+      } catch (error) {
+        console.error("Error loading forecast:", error);
+        setForecast(null);
+      } finally {
+        setForecastLoading(false);
+      }
+    };
+    loadForecast();
+  }, []);
+
   return (
     <div className="flex flex-col gap-4 w-full">
       <Separator />
+
+      {/* Forecast Section */}
+      <div className="flex justify-center">
+        <ForecastCard
+          prediction={forecast?.prediction || 0}
+          loading={forecastLoading}
+          dailyAverages={forecast?.dailyAverages || []}
+        />
+      </div>
+
+      <Separator />
+
       {loading && (
         <div className=" flex align-middle justify-center text-sm text-muted-foreground animate-pulse">
           Loading sensor data...

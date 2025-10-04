@@ -30,3 +30,41 @@ export function GET(req: Request) {
     });
   })();
 }
+
+export async function POST(req: Request) {
+  const url =
+    "https://api.openaq.org/v3/sensors/1601/days?date_to=2025-10-04T00:00:00.000Z&date_from=2025-09-24T00:00:00.000Z";
+  const apiKey = process.env.NEXT_PUBLIC_OPENAQ_API_KEY || "";
+  const res = await fetch(url, {
+    headers: {
+      "X-API-Key": apiKey,
+      Accept: "application/json",
+    },
+  });
+
+  const data = await res.json();
+  const results = Array.isArray(data?.results) ? data.results : [];
+  const dailyAverages = results.map(
+    (r: any) => (r?.summary?.avg ?? r?.value ?? null) * 10000
+  );
+
+  console.log("Data:", JSON.stringify(data));
+
+  const res2 = await fetch("http://localhost:8000/predict-no2", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ values: dailyAverages }),
+  });
+
+  const body2 = await res2.json();
+
+  return new Response(
+    JSON.stringify({ dailyAverages, prediction: body2?.prediction ?? "" }),
+    {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+}
