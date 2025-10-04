@@ -1,7 +1,7 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 
@@ -31,8 +31,6 @@ export default function AIChatPage() {
     setIsLoading(true);
 
     try {
-      console.log('Sending request:', { message: input, mode });
-      
       const response = await fetch("/api/ai", {
         method: "POST",
         headers: {
@@ -45,15 +43,15 @@ export default function AIChatPage() {
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to get AI response');
+        throw new Error(data.error || "Failed to get AI response");
       }
-      
+
       // Add AI response
       const aiMessage: Message = {
         type: "ai",
-        content: data.response || "Sorry, I couldn't process that request.",
+        content: data.advice || "Sorry, I couldn't process that request.",
         mode: mode,
       };
       setMessages((prev) => [...prev, aiMessage]);
@@ -62,7 +60,10 @@ export default function AIChatPage() {
       // Add error message
       const errorMessage: Message = {
         type: "ai",
-        content: error instanceof Error ? error.message : "Sorry, there was an error processing your request.",
+        content:
+          error instanceof Error
+            ? error.message
+            : "Sorry, there was an error processing your request.",
         mode: mode,
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -79,19 +80,23 @@ export default function AIChatPage() {
             <Button
               variant={mode === "pollution" ? "default" : "outline"}
               onClick={() => setMode("pollution")}
-              className={`${mode === "pollution" ? 'bg-blue-600 hover:bg-blue-700' : ''} text-sm font-semibold px-6 py-2 rounded-full transition-all`}
+              className={`${
+                mode === "pollution" ? "bg-blue-600 hover:bg-blue-700" : ""
+              } text-sm font-semibold px-6 py-2 rounded-full transition-all`}
             >
               🌫️ Air Quality Mode
             </Button>
             <Button
               variant={mode === "wildfire" ? "default" : "outline"}
               onClick={() => setMode("wildfire")}
-              className={`${mode === "wildfire" ? 'bg-red-600 hover:bg-red-700' : ''} text-sm font-semibold px-6 py-2 rounded-full transition-all`}
+              className={`${
+                mode === "wildfire" ? "bg-red-600 hover:bg-red-700" : ""
+              } text-sm font-semibold px-6 py-2 rounded-full transition-all`}
             >
               🔥 Wildfire Mode
             </Button>
           </div>
-          
+
           <ScrollArea className="h-[600px] mb-6 p-6 rounded-xl border bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm shadow-inner">
             <div className="flex flex-col gap-4">
               {messages.map((message, index) => (
@@ -141,12 +146,12 @@ export default function AIChatPage() {
               }
               className="flex-1 p-4 rounded-xl border bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner text-[15px] transition-all placeholder:text-gray-400"
             />
-            <Button 
-              onClick={sendMessage} 
+            <Button
+              onClick={sendMessage}
               disabled={isLoading}
               className="px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              {isLoading ? 'Sending...' : 'Send'}
+              {isLoading ? "Sending..." : "Send"}
             </Button>
           </div>
         </div>
