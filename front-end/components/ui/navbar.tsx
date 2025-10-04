@@ -14,10 +14,10 @@ export default function Navbar() {
           </Link>
           <div className="flex items-center gap-6">
             <Link
-              href="/chat"
+              href="/aqi-map"
               className="text-sm font-medium hover:text-primary transition-colors"
             >
-              AeroGuard Chat
+              AQI Map
             </Link>
             <Link
               href="/aqi-anderson"
@@ -25,6 +25,24 @@ export default function Navbar() {
             >
               <span className="w-2 h-2 rounded-full bg-green-500"></span>
               AQI Anderson
+            </Link>
+            <Link
+              href="/report"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
+              Report
+            </Link>
+            <Link
+              href="/chat"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
+              Chat
+            </Link>
+            <Link
+              href="/global"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
+              Global
             </Link>
             <ThemeDropdown />
           </div>
