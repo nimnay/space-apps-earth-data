@@ -26,6 +26,12 @@ export default function Navbar() {
               <span className="w-2 h-2 rounded-full bg-green-500"></span>
               AQI Anderson
             </Link>
+            <Link
+              href="/map"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
+              Map
+            </Link>
             <ThemeDropdown />
           </div>
         </div>
