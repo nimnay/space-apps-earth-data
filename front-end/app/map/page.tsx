@@ -1,4 +1,4 @@
-import RegionMap from "@/components/region-map";
+import MapViewer from "@/components/map-viewer";
 
 export const metadata = {
   title: "Regional Map",
@@ -10,7 +10,7 @@ export default function Page() {
     <main className="mx-auto max-w-7xl px-6 py-10">
       <h1 className="text-2xl font-bold mb-4">Regional Map</h1>
       <p className="mb-6 text-muted-foreground">Showing Georgia, North Carolina, South Carolina, and Tennessee.</p>
-      <RegionMap />
+  <MapViewer />
     </main>
   );
 }

@@ -3,7 +3,9 @@
 import { useEffect, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 
-export default function RegionMap() {
+type MapView = 'citizen' | 'ems';
+
+export default function RegionMap({ view = 'citizen' }: { view?: MapView }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
 
@@ -116,6 +118,8 @@ export default function RegionMap() {
               return inside;
             };
 
+            const wildfirePoints: [number, number][] = [];
+
             for (const ev of events) {
               for (const geom of ev.geometry || []) {
                 const [lon, lat] = geom.coordinates;
@@ -156,6 +160,8 @@ export default function RegionMap() {
                       const html = `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:16px;background:${color};box-shadow:0 1px 4px rgba(0,0,0,0.3)">${svg}</div>`;
                       const icon = L.divIcon({ html, className: '', iconSize: [30, 30], iconAnchor: [15, 15] });
                       marker = L.marker([lat, lon], { icon }).addTo(map);
+                      // record wildfire point (lat, lon) for simulated user placement
+                      wildfirePoints.push([lat, lon]);
                     } else {
                       marker = L.circleMarker([lat, lon], { radius: 7, color, fillColor: color, fillOpacity: 0.9 }).addTo(map);
                     }
@@ -173,6 +179,42 @@ export default function RegionMap() {
                   }
                 }
               }
+            }
+
+            // If view is citizen, add a simulated user location near a random wildfire
+            try {
+                if (view === 'citizen' && wildfirePoints.length) {
+                const idx = Math.floor(Math.random() * wildfirePoints.length);
+                const [wLat, wLon] = wildfirePoints[idx];
+                // small random offset (~0.005-0.02 degrees)
+                const offset = () => (Math.random() * 0.015 + 0.005) * (Math.random() < 0.5 ? -1 : 1);
+                const userLat = wLat + offset();
+                const userLon = wLon + offset();
+                const userMarker = L.circleMarker([userLat, userLon], { radius: 9, color: '#2b6cb0', fillColor: '#2b6cb0', fillOpacity: 1 }).addTo(map);
+                userMarker.bindPopup('<strong>You (simulated)</strong><div style="font-size:12px;color:#666">Randomly placed near a wildfire for demo</div>');
+                // add an approximate radius (5 km) around the user to show proximity
+                try {
+                  const userCircle = L.circle([userLat, userLon], { radius: 5000, color: '#2b6cb0', weight: 1, fillColor: '#2b6cb0', fillOpacity: 0.12, interactive: false }).addTo(map);
+                  // ensure the marker is visible above the circle
+                  if ((userCircle as any).bringToBack) (userCircle as any).bringToBack();
+                  if ((userMarker as any).bringToFront) (userMarker as any).bringToFront();
+                } catch (e) {
+                  console.error('Failed to draw user radius', e);
+                }
+                // center the map on the user's location for citizen view
+                try {
+                  const userZoom = 12;
+                  if (map && typeof (map as any).flyTo === 'function') {
+                    (map as any).flyTo([userLat, userLon], userZoom, { duration: 0.6 });
+                  } else {
+                    map.setView([userLat, userLon], userZoom);
+                  }
+                } catch (e) {
+                  console.error('Failed to center map on user marker', e);
+                }
+              }
+            } catch (e) {
+              console.error('Failed to place simulated user marker', e);
             }
           } catch (err) {
             console.error('Failed to fetch EONET events', err);
