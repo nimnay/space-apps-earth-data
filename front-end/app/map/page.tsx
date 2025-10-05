@@ -26,7 +26,7 @@ export default function Page() {
           <iframe
             title="AQI Map"
             src="/message.html"
-            className="w-full h-full border-0"
+            className="w-full h-full border-0 rounded-xl"
             loading="lazy"
           />
         </div>
