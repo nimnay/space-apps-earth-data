@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { ThemeDropdown } from "../theme-dropdown";
-import { LayoutDashboard, Map, BarChart2, FileText, MessageSquare, Globe } from "lucide-react";
+import {
+  LayoutDashboard,
+  Map,
+  BarChart2,
+  FileText,
+  MessageSquare,
+  Globe,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 
 export default function Navbar() {
@@ -11,12 +18,28 @@ export default function Navbar() {
   const isActive = (path: string) => pathname === path;
 
   const navItems = [
-    { href: "/", label: "Dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
+    {
+      href: "/",
+      label: "Dashboard",
+      icon: <LayoutDashboard className="w-4 h-4" />,
+    },
     { href: "/map", label: "Wildfire Map", icon: <Map className="w-4 h-4" /> },
-    { href: "/aqi-anderson", label: "Anderson", icon: <BarChart2 className="w-4 h-4" /> },
-    { href: "/report", label: "Report", icon: <FileText className="w-4 h-4" /> },
-    { href: "/chat", label: "Chat", icon: <MessageSquare className="w-4 h-4" /> },
-    { href: "/global", label: "Global", icon: <Globe className="w-4 h-4" /> }
+    {
+      href: "/aqi-anderson",
+      label: "Anderson",
+      icon: <BarChart2 className="w-4 h-4" />,
+    },
+    {
+      href: "/report",
+      label: "Report",
+      icon: <FileText className="w-4 h-4" />,
+    },
+    {
+      href: "/chat",
+      label: "Chat",
+      icon: <MessageSquare className="w-4 h-4" />,
+    },
+    { href: "/global", label: "Global", icon: <Globe className="w-4 h-4" /> },
   ];
 
   return (
@@ -35,9 +58,10 @@ export default function Navbar() {
                 key={item.href}
                 href={item.href}
                 className={`px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors
-                  ${isActive(item.href) 
-                    ? 'bg-secondary text-primary' 
-                    : 'hover:bg-secondary/50 hover:text-primary'
+                  ${
+                    isActive(item.href)
+                      ? "bg-secondary text-primary"
+                      : "hover:bg-secondary/50 hover:text-primary"
                   }`}
               >
                 {item.icon}
