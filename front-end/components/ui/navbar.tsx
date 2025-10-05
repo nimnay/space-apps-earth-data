@@ -23,7 +23,7 @@ export default function Navbar() {
       label: "Dashboard",
       icon: <LayoutDashboard className="w-4 h-4" />,
     },
-    { href: "/map", label: "Wildfire Map", icon: <Map className="w-4 h-4" /> },
+    { href: "/map", label: "Maps", icon: <Map className="w-4 h-4" /> },
     {
       href: "/aqi-anderson",
       label: "Anderson",
