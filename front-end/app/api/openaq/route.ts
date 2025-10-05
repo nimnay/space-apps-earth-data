@@ -48,6 +48,8 @@ export async function POST(req: Request) {
     (r: any) => (r?.summary?.avg ?? r?.value ?? null) * 10000
   );
 
+  console.log("Data:", JSON.stringify(data));
+
   const res2 = await fetch("http://localhost:8000/predict-no2", {
     method: "POST",
     headers: {

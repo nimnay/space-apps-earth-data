@@ -82,6 +82,8 @@ const LineChart: React.FC<LineChartProps> = ({
 
   const { resolvedTheme } = useTheme();
 
+  console.log(resolvedTheme);
+
   color = resolvedTheme === "dark" ? "#60a5fa" : "#2563eb";
 
   const draw = React.useCallback(() => {

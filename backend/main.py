@@ -3,7 +3,6 @@ from pydantic import BaseModel, Field
 from pathlib import Path
 import numpy as np
 import tensorflow as tf
-import google.generativeai as genai
 
 app = FastAPI()
 
@@ -37,7 +36,7 @@ class AeroGuardAI:
         if not GEMINI_API_KEY:
             raise RuntimeError("GEMINI_API_KEY environment variable not set")
         genai.configure(api_key=GEMINI_API_KEY)
-        self.model = genai.GenerativeModel("gemini-pro-latest")
+        self.model = genai.GenerativeModel("gemini-2.5-flash")
 
     def _clean_response(self, text: str) -> str:
         lines = text.strip().split("\n")
@@ -78,7 +77,10 @@ SAFETY ZONES:
 
 Keep under 200 words. Be specific about Upstate SC locations.
 """
-        resp = self.model.generate_content(prompt)
+        try:
+            resp = self.model.generate_content(prompt)
+        except Exception as e:
+            print(e)
         return self._clean_response(resp.text)
 
     def get_pollution_advice(
@@ -105,7 +107,10 @@ HEALTH TIPS:
 
 Keep under 200 words. Suggest real Upstate SC locations.
 """
-        resp = self.model.generate_content(prompt)
+        try:
+            resp = self.model.generate_content(prompt)
+        except Exception as e:
+            print(e)
         return self._clean_response(resp.text)
 
 

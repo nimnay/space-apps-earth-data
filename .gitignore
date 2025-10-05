@@ -3,8 +3,3 @@
 .netrc
 *.cookies
 *.urs_cookies
-*.venv
-.env
-*.env*
-__pycache__/
-*.pyc
