@@ -33,7 +33,7 @@ export function GET(req: Request) {
 
 export async function POST(req: Request) {
   const url =
-    "https://api.openaq.org/v3/sensors/1601/days?date_to=2025-10-04T00:00:00.000Z&date_from=2025-09-24T00:00:00.000Z";
+    "https://api.openaq.org/v3/sensors/1601/days?date_to=2025-10-05T00:00:00.000Z&date_from=2025-09-25T00:00:00.000Z";
   const apiKey = process.env.NEXT_PUBLIC_OPENAQ_API_KEY || "";
   const res = await fetch(url, {
     headers: {
@@ -47,8 +47,6 @@ export async function POST(req: Request) {
   const dailyAverages = results.map(
     (r: any) => (r?.summary?.avg ?? r?.value ?? null) * 10000
   );
-
-  console.log("Data:", JSON.stringify(data));
 
   const res2 = await fetch("http://localhost:8000/predict-no2", {
     method: "POST",
