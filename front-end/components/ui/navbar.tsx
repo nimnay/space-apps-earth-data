@@ -30,16 +30,10 @@ export default function Navbar() {
       icon: <BarChart2 className="w-4 h-4" />,
     },
     {
-      href: "/report",
-      label: "Reports",
-      icon: <FileText className="w-4 h-4" />,
-    },
-    {
       href: "/chat",
       label: "Emergency Chat",
       icon: <MessageSquare className="w-4 h-4" />,
     },
-    { href: "/global", label: "Global", icon: <Globe className="w-4 h-4" /> },
   ];
 
   return (

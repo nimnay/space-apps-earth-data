@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 import type { MapView, Location } from "@/types/map";
 
-type MapView = "citizen" | "ems";
 
 interface RegionMapProps {
   view: MapView;

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import type { Location } from "@/types/map";
+import { useState, useRef } from "react";
 
 export default function InlineReportForm() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -39,7 +39,7 @@ export default function InlineReportForm() {
       // Reset form after 2 seconds
       setTimeout(() => {
         setSubmitted(false);
-        e.currentTarget.reset();
+        formRef.current?.reset();
       }, 2000);
     } catch (error) {
       console.error("Failed to submit report:", error);
@@ -62,7 +62,7 @@ export default function InlineReportForm() {
     <div className="mt-8 p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-xl font-semibold text-black mb-4">Report Wildfire</h2>
 
-      <form onSubmit={handleSubmit}>
+      <form ref={formRef} onSubmit={handleSubmit}>
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label htmlFor="latitude" className="block text-sm font-medium text-black mb-1">
