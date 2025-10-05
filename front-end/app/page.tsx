@@ -54,7 +54,7 @@ export default function Home() {
         <Card className="data-viz-card hover:shadow-2xl transition-all duration-500 hover:scale-105">
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-3xl font-black text-white">🌪️ AIR QUALITY</h3>
+              <h3 className="text-3xl font-black text-white">AIR QUALITY</h3>
               <div className="metric-circle">
                 <span className="text-2xl font-bold text-white relative z-10">
                   78
@@ -103,7 +103,7 @@ export default function Home() {
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-3xl font-black text-white">
-                🌡️ ENVIRONMENTAL STATUS
+                ENVIRONMENTAL STATUS
               </h3>
               <div className="metric-circle">
                 <span className="text-2xl font-bold text-white relative z-10">
