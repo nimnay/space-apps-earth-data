@@ -9,11 +9,11 @@ export default function MapViewer() {
   return (
     <div>
       <div className="mb-4 flex items-center gap-4">
-        <label className="text-sm font-medium">View:</label>
+        <label className="text-sm font-medium text-slate-700">View:</label>
         <select
           value={view}
           onChange={(e) => setView(e.target.value as "citizen" | "ems")}
-          className="px-3 py-2 rounded border"
+          className="px-3 py-2 rounded border text-slate-700"
         >
           <option value="citizen">Citizen</option>
           <option value="ems">EMS</option>

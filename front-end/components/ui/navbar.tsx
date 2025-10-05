@@ -20,23 +20,23 @@ export default function Navbar() {
   const navItems = [
     {
       href: "/",
-      label: "Dashboard",
+      label: "Emergency",
       icon: <LayoutDashboard className="w-4 h-4" />,
     },
-    { href: "/map", label: "Maps", icon: <Map className="w-4 h-4" /> },
+    { href: "/map", label: "Fire Map", icon: <Map className="w-4 h-4" /> },
     {
       href: "/aqi-anderson",
-      label: "Anderson",
+      label: "Air Quality",
       icon: <BarChart2 className="w-4 h-4" />,
     },
     {
       href: "/report",
-      label: "Report",
+      label: "Reports",
       icon: <FileText className="w-4 h-4" />,
     },
     {
       href: "/chat",
-      label: "Chat",
+      label: "Emergency Chat",
       icon: <MessageSquare className="w-4 h-4" />,
     },
     { href: "/global", label: "Global", icon: <Globe className="w-4 h-4" /> },
@@ -46,23 +46,23 @@ export default function Navbar() {
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <Link
-            href="/"
-            className="font-bold text-2xl bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent hover:scale-105 transition-transform"
-          >
-            Earth Data
-          </Link>
+                  <Link
+                    href="/"
+                    className="font-black text-2xl text-slate-800 hover:scale-105 transition-all duration-300"
+                  >
+                    AEROGUARD
+                  </Link>
           <div className="flex items-center gap-1">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors
-                  ${
-                    isActive(item.href)
-                      ? "bg-secondary text-primary"
-                      : "hover:bg-secondary/50 hover:text-primary"
-                  }`}
+                        className={`px-6 py-3 rounded-xl text-sm font-black flex items-center gap-2 transition-all duration-300 text-slate-700
+                          ${
+                            isActive(item.href)
+                              ? "bg-gradient-to-r from-slate-600 to-slate-700 text-white shadow-xl fire-glow"
+                              : "hover:bg-gradient-to-r hover:from-slate-600/20 hover:to-slate-700/20 hover:text-slate-800 hover:scale-105"
+                          }`}
               >
                 {item.icon}
                 {item.label}

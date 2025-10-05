@@ -11,7 +11,7 @@ export default function Page() {
       <div className="absolute top-4 right-4 z-10">
         <button
           onClick={() => setShowAqi((v) => !v)}
-          className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition shadow"
+          className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-slate-700 hover:opacity-90 transition shadow"
           aria-pressed={showAqi}
         >
           {showAqi ? "Show Wildfire Map" : "Show AQI Map"}
@@ -21,7 +21,7 @@ export default function Page() {
       {showAqi ? (
         <div className="mx-auto max-w-7xl px-6 py-6 h-full overflow-auto">
           <div className="flex items-center justify-between mb-6 pr-32">
-            <h1 className="text-2xl font-bold">AQI Map</h1>
+            <h1 className="text-2xl font-bold text-slate-700">AQI Map</h1>
           </div>
           <iframe
             title="AQI Map"
@@ -33,9 +33,9 @@ export default function Page() {
       ) : (
         <div className="mx-auto max-w-7xl px-6 py-6 h-full overflow-auto">
           <div className="flex items-center justify-between mb-6 pr-32">
-            <h1 className="text-2xl font-bold">Regional Map</h1>
+            <h1 className="text-2xl font-bold text-slate-700">Regional Map</h1>
           </div>
-          <p className="mb-6 text-muted-foreground">
+          <p className="mb-6 text-slate-700">
             Showing Georgia, North Carolina, South Carolina, and Tennessee.
           </p>
           <MapViewer />
