@@ -258,7 +258,7 @@ function stats(values: number[]) {
 
 // ---------- Sensor Card ----------
 const SensorCard: React.FC<{ sensor: Sensor }> = ({ sensor }) => {
-  const ts = formatResults(sensor.data.results);
+  const ts = formatResults(sensor.data.results ?? "");
   const values = ts.map((d) => d.value);
   const { min, max, mean } = stats(values);
   const last = ts[ts.length - 1];
