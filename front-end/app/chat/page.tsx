@@ -75,7 +75,7 @@ export default function AIChatPage() {
   };
 
   return (
-    <div className="container mx-auto max-w-4xl p-4 bg-white text-slate-900">
+    <div className="container mx-auto max-w-4xl p-4 bg-white text-slate-900 rounded-xl">
       <Card className="w-full bg-gray-100 shadow-lg border border-slate-200">
         <div className="p-6">
           <div className="flex gap-3 mb-6 justify-center">
