@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
+import Markdown from "react-markdown";
 
 interface Message {
   type: "user" | "ai";
@@ -59,7 +60,6 @@ export default function AIChatPage() {
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error("Failed to send message:", error);
-      // Add error message
       const errorMessage: Message = {
         type: "ai",
         content:
@@ -115,9 +115,7 @@ export default function AIChatPage() {
                         : "bg-gradient-to-r from-gray-100 to-gray-50 dark:from-slate-800 dark:to-slate-700 shadow-md mr-4"
                     } transform transition-all duration-200 hover:scale-[1.02]`}
                   >
-                    <pre className="whitespace-pre-wrap font-sans text-[15px] leading-relaxed">
-                      {message.content}
-                    </pre>
+                    <Markdown>{message.content}</Markdown>
                   </div>
                 </div>
               ))}

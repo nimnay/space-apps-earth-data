@@ -22,7 +22,6 @@ def root():
 
 @app.post("/predict-no2")
 def predict_no2(payload: NO2Input):
-    print(payload)
     arr = np.array(payload.values, dtype=float)
     input_data = arr.reshape(1, 10, 1)
     pred = model.predict(input_data, verbose=0)

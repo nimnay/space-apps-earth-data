@@ -77,7 +77,6 @@ export async function POST(req: NextRequest) {
         { status: 502 }
       );
     }
-
     return NextResponse.json({ advice: data.advice.trim() });
   } catch (error: any) {
     return NextResponse.json(
