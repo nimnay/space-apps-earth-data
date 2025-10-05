@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "🛡️ AeroGuard - Professional Air Quality Monitoring",
+  title: "AeroGuard",
   description: "Real-time air quality monitoring and environmental alerts for Upstate South Carolina. Professional-grade monitoring system for community safety.",
 };
 
