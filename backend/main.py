@@ -8,7 +8,10 @@ import google.generativeai as genai
 app = FastAPI()
 
 
-model = tf.keras.models.load_model("no2_pred_10_window_newer.keras")
+MODEL_PATH = (Path(__file__).resolve().parent / "no2_pred_10_window_newer.keras")
+if not MODEL_PATH.exists():
+    raise RuntimeError(f"Model file not found: {MODEL_PATH}")
+model = tf.keras.models.load_model(str(MODEL_PATH))
 
 
 class NO2Input(BaseModel):
