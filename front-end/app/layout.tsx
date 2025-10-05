@@ -19,13 +19,13 @@ export default function RootLayout({
       <body>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
+          defaultTheme="system"
+          enableSystem
           disableTransitionOnChange
         >
-          <div className="min-h-screen bg-gradient-to-b from-black via-[#0C1015] to-black dark:from-black dark:via-[#0C1015] dark:to-black">
+          <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-sky-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
             <Navbar />
-            <main className="pt-16 px-8">
+            <main className="pt-16">
               {children}
             </main>
           </div>
