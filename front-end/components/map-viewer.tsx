@@ -18,6 +18,8 @@ export default function MapViewer() {
       </div>
 
       <RegionMap view={view} />
+
+      {/* The in-map Leaflet control now handles navigation; no separate page-level button needed */}
     </div>
   );
 }

@@ -119,6 +119,9 @@ export default function RegionMap({ view = 'citizen' }: { view?: MapView }) {
             };
 
             const wildfirePoints: [number, number][] = [];
+  let userMarkerGlobal: any = null;
+  let userCircleGlobal: any = null;
+  let safeMarkerGlobal: any = null;
 
             for (const ev of events) {
               for (const geom of ev.geometry || []) {
@@ -191,10 +194,36 @@ export default function RegionMap({ view = 'citizen' }: { view?: MapView }) {
                 const userLat = wLat + offset();
                 const userLon = wLon + offset();
                 const userMarker = L.circleMarker([userLat, userLon], { radius: 9, color: '#2b6cb0', fillColor: '#2b6cb0', fillOpacity: 1 }).addTo(map);
+  userMarkerGlobal = userMarker;
                 userMarker.bindPopup('<strong>You (simulated)</strong><div style="font-size:12px;color:#666">Randomly placed near a wildfire for demo</div>');
+                // reverse geocode the simulated user coordinates and save the city to localStorage
+                (async () => {
+                  try {
+                    const rgUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(userLat)}&lon=${encodeURIComponent(userLon)}&addressdetails=1`;
+                    const rgRes = await fetch(rgUrl, { headers: { 'Accept': 'application/json' } });
+                    if (rgRes && rgRes.ok) {
+                      const rgJson = await rgRes.json();
+                      const addr = rgJson.address || {};
+                      const city = addr.city || addr.town || addr.village || addr.hamlet || addr.county || addr.state || null;
+                      if (city) {
+                        const payload = { city, lat: userLat, lon: userLon, savedAt: new Date().toISOString() };
+                        try { window.localStorage.setItem('user_city', JSON.stringify(payload)); } catch (e) { /* ignore storage errors */ }
+                        // update the user marker popup to show the resolved city
+                        try {
+                          userMarker.bindPopup(`<strong>You (simulated)</strong><div style="font-size:12px;color:#666">Saved city: ${city}</div>`).openPopup();
+                        } catch (e) {
+                          // ignore popup errors
+                        }
+                      }
+                    }
+                  } catch (err) {
+                    console.warn('Reverse geocode failed', err);
+                  }
+                })();
                 // add an approximate radius (5 km) around the user to show proximity
                 try {
                   const userCircle = L.circle([userLat, userLon], { radius: 5000, color: '#2b6cb0', weight: 1, fillColor: '#2b6cb0', fillOpacity: 0.12, interactive: false }).addTo(map);
+  userCircleGlobal = userCircle;
                   // ensure the marker is visible above the circle
                   if ((userCircle as any).bringToBack) (userCircle as any).bringToBack();
                   if ((userMarker as any).bringToFront) (userMarker as any).bringToFront();
@@ -202,6 +231,67 @@ export default function RegionMap({ view = 'citizen' }: { view?: MapView }) {
                   console.error('Failed to draw user radius', e);
                 }
                 // center the map on the user's location for citizen view
+  // Add a bottom-right control for navigating to a simulated safe location (citizen view)
+  let navControl: any = null;
+  if (view === 'citizen') {
+    try {
+      navControl = L.control({ position: 'bottomright' });
+      navControl.onAdd = function () {
+  const btn = L.DomUtil.create('button', 'navigate-safe-btn');
+  btn.innerText = 'Navigate to a safe location';
+  // make text red to match requested styling
+  btn.style.cssText = 'background:#fff;padding:8px 10px;border-radius:8px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.15);cursor:pointer;font-weight:600;color:red';
+        L.DomEvent.on(btn, 'click', function (e: any) {
+          L.DomEvent.stopPropagation(e);
+          // handler: compute a safe point away from nearest wildfire and navigate there
+          try {
+            if (!userMarkerGlobal || !wildfirePoints.length) return;
+            const userLatLng = userMarkerGlobal.getLatLng();
+            const uLat = userLatLng.lat;
+            const uLon = userLatLng.lng;
+
+            // find nearest wildfire point (euclidean on degrees)
+            let nearest: [number, number] | null = null;
+            let bestDist = Infinity;
+            for (const wp of wildfirePoints) {
+              const dLat = uLat - wp[0];
+              const dLon = uLon - wp[1];
+              const d = dLat * dLat + dLon * dLon;
+              if (d < bestDist) { bestDist = d; nearest = wp; }
+            }
+            if (!nearest) return;
+            const wLat = nearest[0], wLon = nearest[1];
+
+            // vector from wildfire to user
+            const vLat = uLat - wLat;
+            const vLon = uLon - wLon;
+            // safe point further away along same vector
+            const safeLat = uLat + vLat * 2.0;
+            const safeLon = uLon + vLon * 2.0;
+
+            // remove previous safe marker if any
+            if (safeMarkerGlobal) { map.removeLayer(safeMarkerGlobal); safeMarkerGlobal = null; }
+
+            const safeIconHtml = `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:6px;background:#22c55e;color:white;font-weight:700">✔</div>`;
+            const safeIcon = L.divIcon({ html: safeIconHtml, className: '', iconSize: [30, 30], iconAnchor: [15, 15] });
+            safeMarkerGlobal = L.marker([safeLat, safeLon], { icon: safeIcon }).addTo(map);
+            safeMarkerGlobal.bindPopup('<strong>Safe location (simulated)</strong>').openPopup();
+            if (map && typeof (map as any).flyTo === 'function') {
+              (map as any).flyTo([safeLat, safeLon], 13, { duration: 0.8 });
+            } else {
+              map.setView([safeLat, safeLon], 13);
+            }
+          } catch (err) {
+            console.error('Failed navigate to safe location', err);
+          }
+        });
+        return btn;
+      };
+      navControl.addTo(map);
+    } catch (err) {
+      console.error('Failed to add navigate control', err);
+    }
+  }
                 try {
                   const userZoom = 12;
                   if (map && typeof (map as any).flyTo === 'function') {
