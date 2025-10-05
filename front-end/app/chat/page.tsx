@@ -115,7 +115,18 @@ export default function AIChatPage() {
                         : "bg-gradient-to-r from-gray-100 to-gray-50 dark:from-slate-800 dark:to-slate-700 shadow-md mr-4"
                     } transform transition-all duration-200 hover:scale-[1.02]`}
                   >
-                    <Markdown>{message.content}</Markdown>
+                    <Markdown
+                      components={{
+                        p: (props) => (
+                          <p
+                            className="whitespace-pre-wrap leading-relaxed"
+                            {...props}
+                          />
+                        ),
+                      }}
+                    >
+                      {message.content}
+                    </Markdown>
                   </div>
                 </div>
               ))}
