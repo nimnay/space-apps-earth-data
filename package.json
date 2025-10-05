@@ -1,0 +1,21 @@
+{
+  "name": "space-apps-earth-data",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/ben-cuff/space-apps-earth-data#readme",
+  "bugs": {
+    "url": "https://github.com/ben-cuff/space-apps-earth-data/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ben-cuff/space-apps-earth-data.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npm --prefix front-end run dev & uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000"
+  }
+}

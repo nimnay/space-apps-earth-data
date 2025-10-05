@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as d3 from "d3";
 import * as React from "react";
@@ -45,20 +46,51 @@ interface Sensor {
 }
 
 // ---------- Hooks ----------
-function useResizeObserver<T extends HTMLElement>(
-  callback: (entry: DOMRectReadOnly) => void
-) {
-  const ref = React.useRef<T | null>(null);
-  React.useEffect(() => {
-    if (!ref.current) return;
-    const obs = new ResizeObserver((entries) => {
-      const e = entries[0];
-      callback(e.contentRect);
-    });
-    obs.observe(ref.current);
-    return () => obs.disconnect();
+function useResizeObserver<T extends HTMLElement>(callback: (entry: DOMRectReadOnly) => void) {
+  // Return a callback ref that attaches a ResizeObserver when the element mounts.
+  const observerRef = React.useRef<ResizeObserver | null>(null);
+  const nodeRef = React.useRef<T | null>(null);
+
+  const setRef = React.useCallback((node: T | null) => {
+    // disconnect previous observer
+    if (observerRef.current && nodeRef.current) {
+      try {
+        observerRef.current.disconnect();
+      } catch {}
+      observerRef.current = null;
+    }
+
+    nodeRef.current = node;
+
+    if (node) {
+      // call back once with initial size
+      try {
+        const rect = node.getBoundingClientRect() as DOMRectReadOnly;
+        callback(rect);
+      } catch {}
+
+      const obs = new ResizeObserver((entries) => {
+        const e = entries[0];
+        if (e) callback(e.contentRect);
+      });
+      obs.observe(node);
+      observerRef.current = obs;
+    }
   }, [callback]);
-  return ref;
+
+  // cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (observerRef.current) {
+        try {
+          observerRef.current.disconnect();
+        } catch {}
+        observerRef.current = null;
+      }
+    };
+  }, []);
+
+  return { setRef, nodeRef };
 }
 
 // ---------- Chart Component ----------
@@ -77,7 +109,7 @@ const LineChart: React.FC<LineChartProps> = ({
   units,
   id,
 }) => {
-  const containerRef = useResizeObserver<HTMLDivElement>(() => draw());
+  const { setRef: containerRef, nodeRef: containerNodeRef } = useResizeObserver<HTMLDivElement>(() => draw());
   const svgRef = React.useRef<SVGSVGElement | null>(null);
 
   const { resolvedTheme } = useTheme();
@@ -87,9 +119,12 @@ const LineChart: React.FC<LineChartProps> = ({
   color = resolvedTheme === "dark" ? "#60a5fa" : "#2563eb";
 
   const draw = React.useCallback(() => {
-    if (!containerRef.current || !svgRef.current || data.length === 0) return;
+    if (!containerNodeRef.current || !svgRef.current || data.length === 0) {
+      console.debug("LineChart: draw skipped. container present:", !!containerNodeRef.current, "svg present:", !!svgRef.current, "data.length:", data.length);
+      return;
+    }
 
-    const width = containerRef.current.clientWidth;
+  const width = containerNodeRef.current.clientWidth;
     const margin = { top: 8, right: 12, bottom: 22, left: 40 };
     const innerW = width - margin.left - margin.right;
     const innerH = height - margin.top - margin.bottom;
@@ -226,6 +261,7 @@ const LineChart: React.FC<LineChartProps> = ({
   }, [data, color, height, containerRef]);
 
   React.useEffect(() => {
+    console.debug("LineChart: useEffect draw triggered for id", id, "data.length", data.length, data.slice(0,2));
     draw();
   }, [draw]);
 
@@ -238,13 +274,19 @@ const LineChart: React.FC<LineChartProps> = ({
 
 // ---------- Utility ----------
 function formatResults(results: SensorResult[]) {
+  if (!results || !Array.isArray(results)) {
+    return [];
+  }
+  
   return results
+    .filter(r => r && r.period && r.parameter && typeof r.value === 'number')
     .map((r) => ({
       date: new Date(r.period.datetimeFrom.utc),
       value: r.value,
       units: r.parameter.units,
       parameter: r.parameter.name,
     }))
+    .filter(item => !isNaN(item.date.getTime()))
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
@@ -258,7 +300,24 @@ function stats(values: number[]) {
 
 // ---------- Sensor Card ----------
 const SensorCard: React.FC<{ sensor: Sensor }> = ({ sensor }) => {
-  const ts = formatResults(sensor.data.results ?? "");
+  // Add safety checks for sensor data
+  if (!sensor || !sensor.data || !sensor.data.results) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">No Data Available</CardTitle>
+          <CardDescription className="text-xs">Sensor data not available</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="text-center text-muted-foreground py-8">
+            <div className="text-sm">Unable to load sensor data</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const ts = formatResults(sensor.data.results);
   const values = ts.map((d) => d.value);
   const { min, max, mean } = stats(values);
   const last = ts[ts.length - 1];
@@ -415,16 +474,111 @@ export default function AQIVisualization() {
     dailyAverages: number[];
   } | null>(null);
   const [forecastLoading, setForecastLoading] = React.useState(false);
+  const [dataStatus, setDataStatus] = React.useState<string>("");
 
   React.useEffect(() => {
     const load = async () => {
       setLoading(true);
-
-      const res = await fetch("/api/openaq");
-      const json = await res.json();
-
-      setSensors(json.sensors);
-      setLoading(false);
+      
+      // Try the main API first
+      try {
+        const res = await fetch("/api/openaq");
+        
+        if (res.ok) {
+          const json = await res.json();
+          if (json.sensors && json.sensors.length > 0) {
+            setSensors(json.sensors);
+            setDataStatus(json.status || "live_data");
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (error) {
+        console.warn("Main sensor API failed, trying mock data:", error);
+      }
+      
+      // Fallback to mock data
+      try {
+        const mockRes = await fetch("/api/openaq/mock");
+        
+        if (mockRes.ok) {
+          const mockJson = await mockRes.json();
+          setSensors(mockJson.sensors || []);
+          setDataStatus("mock_data");
+        } else {
+          throw new Error("Mock sensor API also failed");
+        }
+      } catch (mockError) {
+        console.error("Both sensor APIs failed, using hardcoded fallback:", mockError);
+        // Hardcoded fallback sensor data
+        setSensors([
+          {
+            id: 13332020,
+            data: {
+              meta: {
+                name: "Anderson Air Quality Station",
+                page: 1,
+                limit: 100,
+                found: "24"
+              },
+              results: Array.from({ length: 24 }, (_, i) => ({
+                value: 45 + Math.sin(i * 0.5) * 10 + Math.random() * 5,
+                parameter: {
+                  id: 1,
+                  name: "NO2",
+                  units: "μg/m³"
+                },
+                period: {
+                  datetimeFrom: {
+                    utc: new Date(Date.now() - (23 - i) * 60 * 60 * 1000).toISOString(),
+                    local: new Date(Date.now() - (23 - i) * 60 * 60 * 1000).toISOString()
+                  },
+                  datetimeTo: {
+                    utc: new Date(Date.now() - (22 - i) * 60 * 60 * 1000).toISOString(),
+                    local: new Date(Date.now() - (22 - i) * 60 * 60 * 1000).toISOString()
+                  },
+                  interval: "1h",
+                  label: "1 hour"
+                }
+              }))
+            }
+          },
+          {
+            id: 13332021,
+            data: {
+              meta: {
+                name: "Anderson Temperature Station",
+                page: 1,
+                limit: 100,
+                found: "24"
+              },
+              results: Array.from({ length: 24 }, (_, i) => ({
+                value: 22 + Math.sin(i * 0.3) * 8 + Math.random() * 3,
+                parameter: {
+                  id: 2,
+                  name: "TEMPERATURE",
+                  units: "°C"
+                },
+                period: {
+                  datetimeFrom: {
+                    utc: new Date(Date.now() - (23 - i) * 60 * 60 * 1000).toISOString(),
+                    local: new Date(Date.now() - (23 - i) * 60 * 60 * 1000).toISOString()
+                  },
+                  datetimeTo: {
+                    utc: new Date(Date.now() - (22 - i) * 60 * 60 * 1000).toISOString(),
+                    local: new Date(Date.now() - (22 - i) * 60 * 60 * 1000).toISOString()
+                  },
+                  interval: "1h",
+                  label: "1 hour"
+                }
+              }))
+            }
+          }
+        ]);
+        setDataStatus("fallback_data");
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
@@ -432,18 +586,56 @@ export default function AQIVisualization() {
   React.useEffect(() => {
     const loadForecast = async () => {
       setForecastLoading(true);
+      
+      // Try the main API first
       try {
         const res = await fetch("/api/openaq", {
           method: "POST",
         });
-        const json = await res.json();
-        setForecast({
-          prediction: json.prediction,
-          dailyAverages: json.dailyAverages,
-        });
+        
+        if (res.ok) {
+          const text = await res.text();
+          if (text.trim()) {
+            const json = JSON.parse(text);
+            setForecast({
+              prediction: json.prediction || 0,
+              dailyAverages: json.dailyAverages || [],
+            });
+            if (json.status) {
+              setDataStatus(json.status);
+            }
+            setForecastLoading(false);
+            return;
+          }
+        }
       } catch (error) {
-        console.error("Error loading forecast:", error);
-        setForecast(null);
+        console.warn("Main API failed, trying mock data:", error);
+      }
+      
+      // Fallback to mock data
+      try {
+        const mockRes = await fetch("/api/openaq/mock", {
+          method: "POST",
+        });
+        
+        if (mockRes.ok) {
+          const mockJson = await mockRes.json();
+          setForecast({
+            prediction: mockJson.prediction || 0,
+            dailyAverages: mockJson.dailyAverages || [],
+          });
+          setDataStatus("mock_data");
+        } else {
+          throw new Error("Mock API also failed");
+        }
+      } catch (mockError) {
+        console.error("Both APIs failed, using hardcoded fallback:", mockError);
+        // Hardcoded fallback data
+        setForecast({
+          prediction: 45.2,
+          dailyAverages: [42.1, 43.5, 44.8, 46.2, 45.9, 44.3, 43.7, 45.1, 46.8, 47.2],
+        });
+        setDataStatus("fallback_data");
       } finally {
         setForecastLoading(false);
       }
@@ -453,6 +645,14 @@ export default function AQIVisualization() {
 
   return (
     <div className="flex flex-col gap-4 w-full">
+      {(dataStatus === "mock_data" || dataStatus === "fallback_data") && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-center">
+          <div className="text-yellow-400 text-sm font-medium">
+            📊 Demo Mode: Using sample data for visualization
+            {dataStatus === "fallback_data" && " (Offline Mode)"}
+          </div>
+        </div>
+      )}
       <Separator />
 
       {/* Forecast Section */}

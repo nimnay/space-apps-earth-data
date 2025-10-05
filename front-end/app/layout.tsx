@@ -4,8 +4,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Earth Data",
-  description: "NASA Space Apps Project by Clemson Students",
+  title: "🛡️ AeroGuard - Professional Air Quality Monitoring",
+  description: "Real-time air quality monitoring and environmental alerts for Upstate South Carolina. Professional-grade monitoring system for community safety.",
 };
 
 export default function RootLayout({
@@ -15,7 +15,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head />
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" 
+          rel="stylesheet" 
+        />
+      </head>
       <body>
         <ThemeProvider
           attribute="class"
@@ -23,7 +30,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-sky-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+          <div className="min-h-screen wildfire-bg">
             <Navbar />
             <main className="pt-16">
               {children}
