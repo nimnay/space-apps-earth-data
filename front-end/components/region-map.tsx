@@ -11,7 +11,11 @@ export default function RegionMap({ view = 'citizen' }: { view?: MapView }) {
 
   useEffect(() => {
     if (!ref.current) return;
-    if (mapRef.current) return;
+    // If a map instance already exists, remove it so we recreate for the new view
+    if (mapRef.current) {
+      try { mapRef.current.remove(); } catch (e) { }
+      mapRef.current = null;
+    }
 
     // All Leaflet operations must be performed client-side; dynamically import leaflet to avoid SSR issues
     (async () => {
@@ -122,6 +126,7 @@ export default function RegionMap({ view = 'citizen' }: { view?: MapView }) {
   let userMarkerGlobal: any = null;
   let userCircleGlobal: any = null;
   let safeMarkerGlobal: any = null;
+          let routeLayerGlobal: any = null;
 
             for (const ev of events) {
               for (const geom of ev.geometry || []) {
@@ -166,7 +171,12 @@ export default function RegionMap({ view = 'citizen' }: { view?: MapView }) {
                       // record wildfire point (lat, lon) for simulated user placement
                       wildfirePoints.push([lat, lon]);
                     } else {
-                      marker = L.circleMarker([lat, lon], { radius: 7, color, fillColor: color, fillOpacity: 0.9 }).addTo(map);
+                      // skip adding non-wildfire event markers when viewing EMS (show only wildfires)
+                      if (view === 'ems') {
+                        marker = null;
+                      } else {
+                        marker = L.circleMarker([lat, lon], { radius: 7, color, fillColor: color, fillOpacity: 0.9 }).addTo(map);
+                      }
                     }
 
                     const popupHtml = `
@@ -177,7 +187,9 @@ export default function RegionMap({ view = 'citizen' }: { view?: MapView }) {
                         ${ev.sources && ev.sources[0] ? `<div style="margin-top:6px"><a href="${ev.sources[0].url}" target="_blank">Source</a></div>` : ''}
                       </div>
                     `;
-                    marker.bindPopup(popupHtml);
+                    if (marker) {
+                      marker.bindPopup(popupHtml);
+                    }
                     break;
                   }
                 }
@@ -280,6 +292,20 @@ export default function RegionMap({ view = 'citizen' }: { view?: MapView }) {
               (map as any).flyTo([safeLat, safeLon], 13, { duration: 0.8 });
             } else {
               map.setView([safeLat, safeLon], 13);
+            }
+            // Draw a simple straight route line between user and safe location
+            try {
+              // remove previous route if present
+              if (routeLayerGlobal) { try { map.removeLayer(routeLayerGlobal); } catch (e) {} routeLayerGlobal = null; }
+              if (userMarkerGlobal) {
+                const uLatLng = userMarkerGlobal.getLatLng();
+                const latlngs = [[uLatLng.lat, uLatLng.lng], [safeLat, safeLon]] as L.LatLngExpression[];
+                routeLayerGlobal = L.polyline(latlngs, { color: '#ef4444', weight: 4, opacity: 0.9 }).addTo(map);
+                // optional: open a small popup on the route
+                try { routeLayerGlobal.bindPopup('<strong>Direct route (straight line)</strong>').openPopup(); } catch (e) {}
+              }
+            } catch (err) {
+              console.warn('Failed to draw direct route', err);
             }
           } catch (err) {
             console.error('Failed navigate to safe location', err);
