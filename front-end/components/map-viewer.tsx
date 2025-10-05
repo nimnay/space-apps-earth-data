@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import RegionMap from "./region-map";
+import InlineReportForm from "./inline-report-form";
+import type { MapView, Location } from "@/types/map";
 
 export default function MapViewer() {
-  const [view, setView] = useState<"citizen" | "ems">("citizen");
+  const [view, setView] = useState<MapView>("citizen");
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
   return (
     <div>
@@ -12,7 +15,7 @@ export default function MapViewer() {
         <label className="text-sm font-medium text-slate-700">View:</label>
         <select
           value={view}
-          onChange={(e) => setView(e.target.value as "citizen" | "ems")}
+          onChange={(e) => setView(e.target.value as MapView)}
           className="px-3 py-2 rounded border text-slate-700"
         >
           <option value="citizen">Citizen</option>
@@ -21,8 +24,8 @@ export default function MapViewer() {
       </div>
 
       <RegionMap view={view} />
-
-      {/* The in-map Leaflet control now handles navigation; no separate page-level button needed */}
+      
+      <InlineReportForm />
     </div>
   );
 }

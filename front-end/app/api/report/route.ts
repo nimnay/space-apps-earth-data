@@ -5,7 +5,7 @@ export async function POST(request: Request) {
     const data = await request.json();
     
     // Validate required fields
-    if (!data.type || !data.location || !data.description || !data.severity) {
+    if (!data.title || !data.location || !data.description) {
       return NextResponse.json(
         { message: 'Missing required fields' },
         { status: 400 }
@@ -22,11 +22,8 @@ export async function POST(request: Request) {
       timestamp: new Date().toISOString(),
     });
 
-    // Send notifications for critical reports
-    if (data.severity === 'critical' || data.severity === 'high') {
-      // TODO: Implement notification system
-      console.log('High priority alert triggered');
-    }
+    // Always log reports for wildfires
+    console.log('Wildfire report received');
 
     return NextResponse.json({
       message: 'Report submitted successfully',

@@ -2,10 +2,17 @@
 
 import { useEffect, useRef } from "react";
 import "leaflet/dist/leaflet.css";
+import type { MapView, Location } from "@/types/map";
 
 type MapView = "citizen" | "ems";
 
-export default function RegionMap({ view }: { view: MapView }) {
+interface RegionMapProps {
+  view: MapView;
+  onLocationSelect?: (location: Location) => void;
+  selectedLocation?: Location | null;
+}
+
+export default function RegionMap({ view, onLocationSelect, selectedLocation }: RegionMapProps) {
   const ref = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
 
@@ -25,11 +32,53 @@ export default function RegionMap({ view }: { view: MapView }) {
         const leaflet = await import("leaflet");
         const L = (leaflet as any).default || leaflet;
         // initialize map centered on the southeast
-        const map = L.map(ref.current, { zoomControl: true }).setView(
-          [33.0, -83.0],
-          6
-        );
+        const map = L.map(ref.current, { zoomControl: true }).setView([33.0, -83.0], 6);
         mapRef.current = map;
+
+        // Add click handler for location selection
+        const locationMarkerRef = { current: null as L.Marker | null };
+
+        map.on('click', (e: L.LeafletMouseEvent) => {
+          const { lat, lng } = e.latlng;
+          
+          // Remove existing marker if any
+          if (locationMarkerRef.current) {
+            map.removeLayer(locationMarkerRef.current);
+          }
+
+          // Create a marker at the clicked location
+          const marker = L.marker([lat, lng], {
+            icon: L.divIcon({
+              className: 'location-marker',
+              html: `<div class="w-6 h-6 rounded-full bg-red-500 border-2 border-white shadow-lg flex items-center justify-center">
+                      <div class="w-2 h-2 rounded-full bg-white"></div>
+                    </div>`,
+              iconSize: [24, 24],
+              iconAnchor: [12, 12]
+            })
+          }).addTo(map);
+
+          locationMarkerRef.current = marker;
+
+          if (onLocationSelect) {
+            onLocationSelect({ lat, lng });
+          }
+        });
+
+        // Add marker for pre-selected location if any
+        if (selectedLocation) {
+          const marker = L.marker([selectedLocation.lat, selectedLocation.lng], {
+            icon: L.divIcon({
+              className: 'location-marker',
+              html: `<div class="w-6 h-6 rounded-full bg-red-500 border-2 border-white shadow-lg flex items-center justify-center">
+                      <div class="w-2 h-2 rounded-full bg-white"></div>
+                    </div>`,
+              iconSize: [24, 24],
+              iconAnchor: [12, 12]
+            })
+          }).addTo(map);
+          locationMarkerRef.current = marker;
+        }
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           maxZoom: 19,
