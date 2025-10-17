@@ -1,5 +1,7 @@
 # Space Apps Earth Data - Air Quality Monitoring Platform
 
+## NASA Space Apps Challenge 2025 - Winner of "Global Impact" at Clemson University
+
 A comprehensive air quality monitoring and prediction platform using NASA TEMPO satellite data, machine learning, and real-time visualization.
 
 ## 🌍 Project Overview
