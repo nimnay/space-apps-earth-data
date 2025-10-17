@@ -4,8 +4,13 @@ from pathlib import Path
 import numpy as np
 import tensorflow as tf
 import google.generativeai as genai
+import os
+from dotenv import load_dotenv
 
 from fastapi.middleware.cors import CORSMiddleware
+
+# Load environment variables
+load_dotenv()
 
 app = FastAPI()
 
@@ -18,7 +23,7 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-MODEL_PATH = Path(__file__).resolve().parent / "no2_pred_10_window_newer.keras"
+MODEL_PATH = Path(__file__).resolve().parent / "models" / "no2_pred_10_window_newer.keras"
 if not MODEL_PATH.exists():
     raise RuntimeError(f"Model file not found: {MODEL_PATH}")
 model = tf.keras.models.load_model(str(MODEL_PATH))
@@ -42,7 +47,7 @@ def predict_no2(payload: NO2Input):
     return {"prediction": prediction}
 
 
-GEMINI_API_KEY = "AIzaSyCpYug6XhxMOsBePcaZGjRADIvwKP31ERU"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 
 class AeroGuardAI:
